@@ -58,7 +58,7 @@ function Send-PhishingNotifications ()
     {
         #call Get-LongUrl to call API to resolve to the normal/long url
         $longurl = Get-LongUrl $url
-        Write-Debug -Message 'longurl: ' $longurl
+        Write-Debug -Message "longurl:  $longurl"
         [array]$ipaddress = ([System.Uri]$longurl).Authority
         $url = $longurl
     }
@@ -74,8 +74,8 @@ function Send-PhishingNotifications ()
     {
         #based on the ipaddress we are going to get which WHOIS/RDAP to use
         $whoisdb = Get-WhichWHOIS $ipaddress[$ip]
-        Write-Debug -Message $whoisdb
-        Write-Debug -Message 'IPADDRESS: ' $ipaddress[$ip]
+        Write-Debug -Message "$whoisdb"
+        Write-Debug -Message "IPADDRESS:  $ipaddress[$ip]"
     
         #based on info from Get-WhichWHOIS we will then begin those specific API calls
         switch ($whoisdb){
@@ -111,13 +111,13 @@ function Send-PhishingNotifications ()
     {
         if ($abusecontact[$a] -ne 'NOCONTACT') 
         {
-            Send-ToAbuseContact -originallink $url -abusecontact $abusecontact[$a] -messagetoattach $messagetoparse -sendOnBehalfName $From
+            Send-ToAbuseContact -originallink $url -abusecontact $abusecontact[$a] -messagetoattach $messagetoparse -From $From
         }
     }
     #additionally, send to IronPort and Anti-Phishing Working Group email distribution list
-    Send-ToIronPort -originallink $url -messagetoattach $messagetoparse -sendOnBehalfName $From
-    
-    Send-ToAntiPhishingGroup -trimmedlink $url.Trim('http://') -sendOnBehalfName $From
+	Send-ToIronPort -originallink $url -messagetoattach $messagetoparse -From $From
+	
+	Send-ToAntiPhishingGroup -trimmedlink $url.Trim('http://') -From $From
 
     $logpath = "$($logpath)\get_whois.log"
     $logvalue = "$(Get-Date);$url;$parsedurl;$([array]$ipaddress[0]);$whoisdb;$abusecontact;$messagetoparse;"

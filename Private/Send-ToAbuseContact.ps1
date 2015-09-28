@@ -23,7 +23,7 @@ function Send-ToAbuseContact
     $Mail = $outlook.CreateItem(0)
     $Mail.To = "$abusecontact"
     $Mail.Attachments.Add($messagetoattach)
-    $Mail.Sentonbehalfofname = "$($sendOnBehalfName)"
+    $Mail.Sentonbehalfofname = "$($From)"
     $Mail.Subject = 'Remove Phishing Website'
     $Mail.Body = "We have received a phishing attempt (attached) that is using an IP registered to this contact.  Please remove this site as soon as you can: $originallink'.' `n`nIn addition, any logs you can provide surrounding the registration or usage of this site would help us understand who is targeting our environment.`n`n Thank you!"
     $Mail.Send()

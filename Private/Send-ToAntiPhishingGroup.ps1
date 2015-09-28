@@ -17,7 +17,7 @@ function Send-ToAntiPhishingGroup
     $outlook = New-Object -ComObject Outlook.Application
     $Mail = $outlook.CreateItem(0)
     $Mail.To = 'anti-phishing-email-reply-discuss@googlegroups.com'
-    $Mail.Sentonbehalfofname = "$($sendOnBehalfName)"
+    $Mail.Sentonbehalfofname = "$($From)"
     $Mail.Subject = ('Phishing Links ' + $date)
     $Mail.Body = "$trimmedlink" + ',' + "$date"
     $Mail.Send()
