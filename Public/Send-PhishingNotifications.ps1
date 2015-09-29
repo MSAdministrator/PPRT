@@ -49,24 +49,33 @@ function Send-PhishingNotifications ()
     $ipaddress = @()
     $regexipv6 = '(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))'
     $regexipv4 = '\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3} (25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b'
-
+    $shorturl = ''
     #Take in .msg file and strip the phishing url
     $url = Get-URLFromMessage $messagetoparse
 
-    #if the url string has 'tinyurl', then process seperately
-    if ($url -like '*tinyurl*')
-    {
-        #call Get-LongUrl to call API to resolve to the normal/long url
-        $longurl = Get-LongUrl $url
-        Write-Debug -Message "longurl:  $longurl"
-        [array]$ipaddress = ([System.Uri]$longurl).Authority
-        $url = $longurl
+    #if the url string has a 'shorturl' from the "shorturls.xml" file, then process seperately
+    #shorturls is a static list created from longurl.org\services
+    Import-Clixml -Path "$(Split-Path $Script:MyInvocation.MyCommand.Path)\Private\shorturls.xml" | ForEach-Object {
+        if ($url -like '$_')
+        {
+            #call Get-LongUrl to call API to resolve to the normal/long url
+            $longurl = Get-LongUrl $url
+            Write-Debug -Message "longurl:  $longurl"
+            [array]$ipaddress = ([System.Uri]$longurl).Authority
+            $url = $longurl
+            $shorturl = $true
+        }
+        else
+        {
+            $shorturl = $false
+        }
     }
-    Else 
+     
+    if ($shorturl -eq $false)
     {
-        #if no 'tinyurl' then parse as normal
-        $parsedurl = Get-ParsedURL $url
-        [array]$ipaddress = Get-IPaddress $parsedurl
+            #if no 'tinyurl' then parse as normal
+            $parsedurl = Get-ParsedURL $url
+            [array]$ipaddress = Get-IPaddress $parsedurl
     }
 
     #for each ipaddress returned from above else statement
