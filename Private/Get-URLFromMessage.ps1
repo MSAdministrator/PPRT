@@ -1,6 +1,7 @@
 ﻿#requires -Version 2
 function Get-URLFromMessage
 {
+    [CmdletBinding()]
     param (
         [parameter(Mandatory = $true,Position = 1,HelpMessage = 'Please provide a .MSG file to Parse')]
         $inputtext

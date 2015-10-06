@@ -1,6 +1,7 @@
 ﻿#requires -Version 2
 function Get-ParsedURL ()
 {
+    [CmdletBinding()]
     param (
         [parameter(Mandatory = $true,Position = 1,HelpMessage = 'Please provide a URL to parse')]
         [string]$url

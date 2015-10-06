@@ -1,6 +1,7 @@
 ﻿#requires -Version 3
 function Check-LACNIC ()
 {
+    [CmdletBinding()]
     param (
         [parameter(Mandatory = $true,Position = 1,HelpMessage = 'Please provide a IP address')]
         $ipaddress

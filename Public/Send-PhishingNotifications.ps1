@@ -1,6 +1,7 @@
 ﻿#requires -Version 2
 function Send-PhishingNotifications ()
-{ 
+{
+	[CmdletBinding()]
     param (
         [parameter(Mandatory = $true,
         HelpMessage = 'Please provide a .MSG file.')]

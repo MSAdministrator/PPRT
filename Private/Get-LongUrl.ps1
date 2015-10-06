@@ -1,6 +1,7 @@
 ﻿#requires -Version 3
 function Get-LongUrl ()
 {
+    [CmdletBinding()]
     param (
         [parameter(Mandatory = $true,Position = 1,HelpMessage = 'Please provide a short URL')]
         $shorturl

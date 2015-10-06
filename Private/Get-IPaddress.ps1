@@ -1,6 +1,7 @@
 ﻿#requires -Version 2
 function Get-IPaddress ()
 {
+    [CmdletBinding()]
     param (
         [parameter(Mandatory = $true,Position = 1,HelpMessage = 'Please provide a valid HOSTNAME')]
         [string]$hostname

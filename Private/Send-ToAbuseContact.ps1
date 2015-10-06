@@ -1,6 +1,7 @@
 ﻿#requires -Version 2
 function Send-ToAbuseContact
-{ 
+{ 	
+    [CmdletBinding()]
     param (
         [parameter(Mandatory = $true,
         HelpMessage = 'Please the original phishing url link')]
