@@ -98,8 +98,7 @@ function Get-PhishingGeoLocation
     
     Write-Verbose -Message "Gathering Email Data from $(($message | Measure-Object).count) email messages"
 
-    Get-ChildItem $message | ForEach-Object -Process 
-    {
+    Get-ChildItem $message | ForEach-Object -Process {
         try 
         {
             Add-Type -AssemblyName 'Microsoft.Office.Interop.Outlook'
