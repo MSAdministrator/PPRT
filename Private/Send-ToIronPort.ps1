@@ -18,10 +18,10 @@ function Send-ToIronPort
 
     $outlook = New-Object -ComObject Outlook.Application
     $Mail = $outlook.CreateItem(0)
-    $Mail.To = 'spam@access.ironport.com'
+    $Mail.To = 'spam@access.ironport.com;phishing-report@us-cert.gov;spam@uce.gov'
     $Mail.Attachments.Add($messagetoattach)
     $Mail.Sentonbehalfofname = "$($From)"
     $Mail.Subject = 'Phishing E-Mail'
-    $Mail.Body = "The following email is a phishing email: $originallink"
+    $Mail.Body = "The attached email is a phishing email: $originallink"
     $Mail.Send()
 }
