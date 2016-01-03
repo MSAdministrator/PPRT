@@ -1,4 +1,4 @@
-PhishReporter
+PPRT - PowerShell Phishing Response Toolkit
 =============
 
 This PowerShell Module is designed to send notifications to hosting companies that host phishing URLs by utilizing the major WHOIS/RDAP Abuse Point of Contact (POC) information.
