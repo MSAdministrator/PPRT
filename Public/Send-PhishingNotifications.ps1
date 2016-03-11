@@ -1,4 +1,4 @@
-﻿#requires -Version 2
+#requires -Version 2
 function Send-PhishingNotifications ()
 {
 	[CmdletBinding()]
@@ -13,7 +13,15 @@ function Send-PhishingNotifications ()
 
         [parameter(Mandatory = $true,
         HelpMessage = "Please provide a 'Send On Behalf of' email address")]
-        $From
+        $From,
+
+        [parameter(ParameterSetName='VT',
+        HelpMessage = "Please include the VirusTotal switch to scan files against VT API.")]
+        [switch]$VirusTotal,
+
+        [parameter(ParameterSetName='VT',
+        HelpMessage = "Please provide your Virus Total API Key")]
+        $VTAPIKey
     ) 
 
     <#
@@ -52,6 +60,32 @@ function Send-PhishingNotifications ()
     $regexipv4 = '\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3} (25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b'
     $shorturl = ''
     #Take in .msg file and strip the phishing url
+
+    if ($VirusTotal)
+    {
+        $AttachmentHash = Expand-MsgAttachment -Path $messagetoparse | Get-FileHash
+
+        foreach ($hash in $AttachmentHash.Hash)
+        {
+            $VTFileReport = Get-VTFileReport -Resource $hash -APIKey $VTAPIKey
+
+            if ($VTFileReport.ResponseCode -eq 1)
+            {
+                $result = [System.Windows.Forms.MessageBox]::Show("The following SHA256 hash was already been submitted to VirusTotal.`n $hash", 'Warning', 'Ok', 'Warning')
+                Write-LogEntry -type Info -message "VirusTotal Submission" -Folder $logpath -CustomMessage "Hash has been previously submitted to VirusTotal: $hash"
+            }
+            if ($VTFileReport.ResponseCode -eq 0)
+            {
+                $result = [System.Windows.Forms.MessageBox]::Show("The following SHA256 hash has NOT been submitted to VirusTotal. Do you want to upload this file to VirusTotal Now?`n $hash", 'Warning', 'YesNo', 'Warning')
+
+                if ($result -eq $true)
+                {
+                    $SubmitToVT = Submit-VTFile -File $AttachmentHash.Path -APIKey $VTAPIKey
+                }
+            }
+        }
+    }
+
     $url = Get-URLFromMessage $messagetoparse
 
     #if the url string has a 'shorturl' from the "shorturls.xml" file, then process seperately
