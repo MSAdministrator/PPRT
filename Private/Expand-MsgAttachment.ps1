@@ -1,50 +1,5 @@
-﻿#requires -Version 2
-function Get-URLFromMessage
+﻿function Expand-MsgAttachment
 {
-    [CmdletBinding()]
-    param (
-        [parameter(Mandatory = $true,Position = 1,HelpMessage = 'Please provide a .MSG file to Parse')]
-        $inputtext
-    ) 
-    <#
-            .SYNOPSIS 
-            Takes a .MSG file and parses the links from the message. This function returns the full URL within an email. 
-
-            .DESCRIPTION
-            Takes a .MSG file and parses the links from the message.
-            This function returns the full URL within an email. 
-
-            .PARAMETER inputtext
-            Specifices the specific .MSG to parse
-   
-            .EXAMPLE
-            C:\PS> Get-URLFromMessage 'C:\Users\UserName\Desktop\PHISING_EMAILS\Dear Email User.msg'
-
-    #>
- 
-
-    Get-ChildItem $inputtext|
-    ForEach-Object -Process {
-        $outlook = New-Object -ComObject outlook.application
-        $msg = $outlook.CreateItemFromTemplate($_.FullName)
-        #$msg | Select-Object -Property *
-        $url = $msg |
-        Select-Object -Property body |
-        Select-String -Pattern '(?:(?:https?|ftp|file)://|www\.|ftp\.)(?:\([-A-Z0-9+&@#/%=~_|$?!:,.]*\)|[-A-Z0-9+&@#/%=~_|$?!:,.])*(?:\([-A-Z0-9+&@#/%=~_|$?!:,.]*\)|[A-Z0-9+&@#/%=~_|$])' |
-        ForEach-Object -Process {
-            $_.Matches
-        } |
-        ForEach-Object -Process {
-            $_.Value
-        } 
-    }
-
-    Write-Host 'url: ' $url
-    return $url.trim('<','>')
-
-
-
-
     [CmdletBinding()]
 
     Param
@@ -66,6 +21,9 @@ function Get-URLFromMessage
         $outlook = New-Object -ComObject Outlook.Application
 
         $attFn
+        $SavePath
+        $Desktop = [Environment]::GetFolderPath("Desktop")
+        $ReturnObject = @()
     }
 
     Process
@@ -84,15 +42,17 @@ function Get-URLFromMessage
             # Skip non-.msg files
             if ($msgFn -notlike "*.msg") {
                 Write-Verbose "Skipping $_ (not an .msg file)..."
-                return
+                return $msgFn
             }
 
             # Extract message body
             Write-Verbose "Extracting attachments from $_..."
-            $msg = $outlook.CreateItemFromTemplate($msgFn)
+            $msg = $outlook.CreateItemFromTemplate($msgFn)   
+
             $msg.Attachments | % {
                 # Work out attachment file name
                 $attFn = $msgFn -replace '\.msg$', " - Attachment - $($_.FileName)"
+                Write-Verbose "Attachment File Name: $attFn"
 
                 # Do not try to overwrite existing files
                 if (Test-Path -literalPath $attFn) {
@@ -101,8 +61,12 @@ function Get-URLFromMessage
                 }
 
                 # Save attachment
-                Write-Verbose "Saving $($_.FileName)..."
-                $_.SaveAsFile($attFn)
+                Write-Verbose "Saving $("$desktop\POSSIBLE_MALWARE\$($_.FileName)")..."
+                [string]$SavePath = $("$desktop\POSSIBLE_MALWARE\$($_.FileName)")
+                
+                $_.SaveAsFile($SavePath)
+
+                $ReturnObject += $SavePath
 
                 # Output to pipeline
                # Get-ChildItem -LiteralPath $attFn
@@ -113,15 +77,6 @@ function Get-URLFromMessage
     End
     {
         Write-Verbose "Done."
-        return (Get-ChildItem -LiteralPath $attFn)
+        return (Get-ChildItem -LiteralPath $ReturnObject)
     }
-
-
-
-
-
-
-
-
-
 }

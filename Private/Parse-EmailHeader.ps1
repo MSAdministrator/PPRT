@@ -71,6 +71,7 @@ Function Process-ReceivedFrom
 Param($text) 
 $regexFrom1 = 'Received: from([\s\S]*?)by([\s\S]*?)with([\s\S]*?);([(\s\S)*]{32,36})(?:\s\S*?)' 
 $fromMatches = $text | Select-String -Pattern $regexFrom1 -AllMatches 
+write-host "From Matches: " $fromMatches
 if ($fromMatches) 
 { 
         $rfArray = @() 
@@ -81,7 +82,8 @@ if ($fromMatches)
             Switch -wildcard ($with) 
             { 
              "SMTP*" {$with = "SMTP"} 
-             "ESMTP*" {$with = "ESMTP"} 
+             "ESMTP*" {$with = "ESMTP"}
+             "NNFMP*" {$with = "NNFMP"}
              default{} 
             } 
         $time = Clean-string $_.groups[4].value 
