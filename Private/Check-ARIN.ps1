@@ -24,7 +24,7 @@ function Check-ARIN ()
     #>
 
 
-    Write-Debug -Message 'ipaddress: ' $ipaddress
+    #Write-Debug -Message 'ipaddress: ' $ipaddress
     $regx = "[a-z0-9!#\$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#\$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?"
 
     $rawdata = Invoke-WebRequest -Uri "http://rdap.arin.net/bootstrap/ip/$ipaddress" | ConvertFrom-Json
@@ -36,9 +36,9 @@ function Check-ARIN ()
             [array]$result += $item
         }
     }
-    Write-Debug -Message 'check-arin result: ' $result
+   # Write-Debug -Message 'check-arin result: ' $result
     $parsedresult = $result | Select-String -Pattern $regx
-    Write-Debug -Message 'parsed result: ' $parsedresult
+    #Write-Debug -Message 'parsed result: ' $parsedresult
     if ($parsedresult.count -gt 0)
     {
         return $parsedresult
