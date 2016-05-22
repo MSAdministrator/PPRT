@@ -14,7 +14,7 @@ function Get-PhishingGeoLocationAllIPs
         [string]$FolderPath
     )
 
-    $OutStartingIPMap = "$FolderPath\PhishReporterPolyline.html"
+    $OutStartingIPMap = "$FolderPath\PPRT_MapAllIPs.html"
 
 
     $html = @"

@@ -14,7 +14,7 @@ function Get-PhishingGeoLocationHeatMap
         [string]$FolderPath
     )
 
-    $OutHeatMap = "$FolderPath\PhishReporterHeatMap.html"
+    $OutHeatMap = "$FolderPath\PPRT_HeatMap.html"
 
     $webdata = @"
   <head>

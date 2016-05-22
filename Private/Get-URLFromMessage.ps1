@@ -1,4 +1,4 @@
-﻿#requires -Version 2
+#requires -Version 2
 function Get-URLFromMessage
 {
     [CmdletBinding()]
@@ -44,7 +44,11 @@ function Get-URLFromMessage
 
 
 
+<<<<<<< HEAD
     <#
+=======
+
+>>>>>>> c9558d8877117bc2d024c6beecdac971c588c394
     [CmdletBinding()]
 
     Param
@@ -115,6 +119,7 @@ function Get-URLFromMessage
         Write-Verbose "Done."
         return (Get-ChildItem -LiteralPath $attFn)
     }
+<<<<<<< HEAD
 
 
 
@@ -124,4 +129,6 @@ function Get-URLFromMessage
 
 
 
+=======
+>>>>>>> c9558d8877117bc2d024c6beecdac971c588c394
 }

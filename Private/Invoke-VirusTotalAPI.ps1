@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 ﻿<#
+=======
+<#
+>>>>>>> c9558d8877117bc2d024c6beecdac971c588c394
 .Synopsis
    Short description
 .DESCRIPTION
@@ -78,4 +82,8 @@ function Invoke-VirusTotalAPI
     End
     {
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> c9558d8877117bc2d024c6beecdac971c588c394

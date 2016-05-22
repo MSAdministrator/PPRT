@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 ﻿function Expand-MsgAttachment
+=======
+function Expand-MsgAttachment
+>>>>>>> c9558d8877117bc2d024c6beecdac971c588c394
 {
     [CmdletBinding()]
 
@@ -79,4 +83,8 @@
         Write-Verbose "Done."
         return (Get-ChildItem -LiteralPath $ReturnObject)
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> c9558d8877117bc2d024c6beecdac971c588c394
