@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-﻿function Expand-MsgAttachment
-=======
 function Expand-MsgAttachment
->>>>>>> c9558d8877117bc2d024c6beecdac971c588c394
 {
     [CmdletBinding()]
 
@@ -20,8 +16,6 @@ function Expand-MsgAttachment
 
     Begin
     {
-        # Load application
-        Write-Verbose "Loading Microsoft Outlook..."
         $outlook = New-Object -ComObject Outlook.Application
 
         $attFn
@@ -83,8 +77,5 @@ function Expand-MsgAttachment
         Write-Verbose "Done."
         return (Get-ChildItem -LiteralPath $ReturnObject)
     }
-<<<<<<< HEAD
+
 }
-=======
-}
->>>>>>> c9558d8877117bc2d024c6beecdac971c588c394

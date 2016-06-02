@@ -3,8 +3,9 @@ function Get-IPaddress ()
 {
     [CmdletBinding()]
     param (
-        [parameter(Mandatory = $true,Position = 1,HelpMessage = 'Please provide a valid HOSTNAME')]
-        [string]$hostname
+        [parameter(Mandatory = $true,
+                   HelpMessage = 'Please provide a valid HOSTNAME')]
+        $hostname
     ) 
     <#
             .SYNOPSIS 
@@ -22,6 +23,7 @@ function Get-IPaddress ()
 
     #>
 
+    write-host "Get-Ipaddress hostname: $hostname"
     $ipaddresses = [System.Net.Dns]::GetHostAddresses("$hostname").IPAddressToString
 
     return $ipaddresses

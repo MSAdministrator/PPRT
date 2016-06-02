@@ -39,12 +39,11 @@ function Get-URLFromMessage
         } 
     }
 
-    Write-Host 'url: ' $url
     return $url.trim('<','>')
 
 
 
-<<<<<<< HEAD
+
     <#
 =======
 
@@ -124,11 +123,4 @@ function Get-URLFromMessage
 
 
     #>
-
-
-
-
-
-=======
->>>>>>> c9558d8877117bc2d024c6beecdac971c588c394
 }

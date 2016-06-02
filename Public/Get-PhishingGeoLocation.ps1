@@ -107,7 +107,7 @@ function Get-PhishingGeoLocation
         catch
         {
     
-        Write-Debug -Message 'Error: Please try and shutdown Outlook'
+            Write-Debug -Message 'Error: Please try and shutdown Outlook'
         }
 
         $msg = $outlook.CreateItemFromTemplate($_.FullName)
@@ -229,7 +229,8 @@ function Get-PhishingGeoLocation
             $AllIPObject += $tempAllIPObject
 
             $polyline = @()
-}
+        }
+
         $i++
     }#end of foreach message
 
