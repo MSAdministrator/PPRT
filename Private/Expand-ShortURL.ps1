@@ -1,5 +1,5 @@
 ﻿#requires -Version 3
-function Expand-ShortURL
+function Get-AbsoluteUri
 {
     [CmdletBinding()]
     param (
@@ -33,9 +33,9 @@ function Expand-ShortURL
     {
         $url = $URLObject.URL -as [system.URI]
 
-        if (!($uri.AbsoluteURI -ne $null -and $url.Scheme -match '[http|https]'))
+        if (!($url.AbsoluteURI -ne $null -and $url.Scheme -match '[http|https]'))
         {
-            exit
+            Write-Error 'URL is not formatted correctly'
         }
 
         $encodedurl = [system.net.webrequest]::Create($url)
@@ -44,9 +44,9 @@ function Expand-ShortURL
     {
         $url = $URLObject.URL -as [system.URI]
 
-        if (!($uri.AbsoluteURI -ne $null -and $url.Scheme -match '[http|https]'))
+        if (!($url.AbsoluteURI -ne $null -and $url.Scheme -match '[http|https]'))
         {
-            exit
+            Write-Error 'URL is not formatted correctly'
         }
 
         $encodedurl = [system.net.webrequest]::Create($url)

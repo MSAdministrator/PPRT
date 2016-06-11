@@ -3,8 +3,13 @@ function Get-URLFromMessage
 {
     [CmdletBinding()]
     param (
-        [parameter(Mandatory = $true,Position = 1,HelpMessage = 'Please provide a .MSG file to Parse')]
-        $inputtext
+        [parameter(Mandatory = $true,
+        HelpMessage = 'Please provide a .MSG file.')]
+        [PSTypeName('PPRT.Message')]
+        $MessageObject,
+
+        [Parameter(Mandatory=$true)]
+        $LogPath
     ) 
     <#
             .SYNOPSIS 
@@ -22,105 +27,30 @@ function Get-URLFromMessage
 
     #>
  
+    $urlobject = @()
 
-    Get-ChildItem $inputtext|
-    ForEach-Object -Process {
-        $outlook = New-Object -ComObject outlook.application
-        $msg = $outlook.CreateItemFromTemplate($_.FullName)
-        #$msg | Select-Object -Property *
-        $url = $msg |
-        Select-Object -Property body |
-        Select-String -Pattern '(?:(?:https?|ftp|file)://|www\.|ftp\.)(?:\([-A-Z0-9+&@#/%=~_|$?!:,.]*\)|[-A-Z0-9+&@#/%=~_|$?!:,.])*(?:\([-A-Z0-9+&@#/%=~_|$?!:,.]*\)|[A-Z0-9+&@#/%=~_|$])' |
-        ForEach-Object -Process {
-            $_.Matches
-        } |
-        ForEach-Object -Process {
-            $_.Value
-        } 
-    }
+    foreach ($msg in $MessageObject)
+    { 
+        $log = Write-LogEntry -type Info -message "Get-URLFromMessage: Getting URL from $($msg.Subject)" -Folder $LogPath
 
-    return $url.trim('<','>')
+        $Subject = $msg.Subject
+        $msg.body | Select-String -Pattern '(?:(?:https?|ftp|file)://|www\.|ftp\.)(?:\([-A-Z0-9+&@#/%=~_|$?!:,.]*\)|[-A-Z0-9+&@#/%=~_|$?!:,.])*(?:\([-A-Z0-9+&@#/%=~_|$?!:,.]*\)|[A-Z0-9+&@#/%=~_|$])' | `
+            ForEach-Object -Process {
+                $_.Matches
+            } |
+            ForEach-Object -Process {
+                $URL = $_.Value
 
+                    $props = @{
+                        URL = ($_.Value).trim('<','>')
+                        Name = $Subject
+                    }
 
+                    $URLObject = New-Object -TypeName PSObject -Property $props
 
+                    $log = Write-LogEntry -type Info -message "Get-URLFromMessage: Getting URL complete!" -Folder $LogPath
 
-    <#
-=======
-
->>>>>>> c9558d8877117bc2d024c6beecdac971c588c394
-    [CmdletBinding()]
-
-    Param
-    (
-        [Parameter(ParameterSetName="Path", Position=0, Mandatory=$True)]
-        [String]$Path,
-
-        [Parameter(ParameterSetName="LiteralPath", Mandatory=$True)]
-        [String]$LiteralPath,
-
-        [Parameter(ParameterSetName="FileInfo", Mandatory=$True, ValueFromPipeline=$True)]
-        [System.IO.FileInfo]$Item
-    )
-
-    Begin
-    {
-        # Load application
-        Write-Verbose "Loading Microsoft Outlook..."
-        $outlook = New-Object -ComObject Outlook.Application
-
-        $attFn
-    }
-
-    Process
-    {
-        switch ($PSCmdlet.ParameterSetName)
-        {
-            "Path"        { $files = Get-ChildItem -Path $Path }
-            "LiteralPath" { $files = Get-ChildItem -LiteralPath $LiteralPath }
-            "FileInfo"    { $files = $Item }
-        }
-        
-        $files | % {
-            # Work out file names
-            $msgFn = $_.FullName
-
-            # Skip non-.msg files
-            if ($msgFn -notlike "*.msg") {
-                Write-Verbose "Skipping $_ (not an .msg file)..."
-                return
+                    Add-ObjectDetail -InputObject $URLObject -TypeName PPRT.PhishingURL 
             }
-
-            # Extract message body
-            Write-Verbose "Extracting attachments from $_..."
-            $msg = $outlook.CreateItemFromTemplate($msgFn)
-            $msg.Attachments | % {
-                # Work out attachment file name
-                $attFn = $msgFn -replace '\.msg$', " - Attachment - $($_.FileName)"
-
-                # Do not try to overwrite existing files
-                if (Test-Path -literalPath $attFn) {
-                    Write-Verbose "Skipping $($_.FileName) (file already exists)..."
-                    return
-                }
-
-                # Save attachment
-                Write-Verbose "Saving $($_.FileName)..."
-                $_.SaveAsFile($attFn)
-
-                # Output to pipeline
-               # Get-ChildItem -LiteralPath $attFn
-            }
-        }
     }
-
-    End
-    {
-        Write-Verbose "Done."
-        return (Get-ChildItem -LiteralPath $attFn)
-    }
-<<<<<<< HEAD
-
-
-
-    #>
 }

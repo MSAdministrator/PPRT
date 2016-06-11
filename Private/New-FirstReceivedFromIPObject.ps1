@@ -8,7 +8,7 @@
 .EXAMPLE
    Another example of how to use this cmdlet
 #>
-function Create-FirstReceivedFromIPObject
+function New-FirstReceivedFromIPObject
 {
     [CmdletBinding()]
     [Alias()]
@@ -35,6 +35,9 @@ function Create-FirstReceivedFromIPObject
         $originalIpLocation = @()
         $originalmarker = @()
         $StartingIPObject = @()
+
+        $tempHeatMapObject = @()
+        $tempStartingIPObject  = @()
     }
     Process
     {
@@ -50,6 +53,9 @@ function Create-FirstReceivedFromIPObject
 
             #calling first received from header returned from parse-emailheader. Location is [0]
             $originalIpLocation = Invoke-RestMethod -Uri "http://freegeoip.net/xml/$($firstReceivedFromIP[0])"
+
+
+            $tempStartingIPObject = @()
 
             #getting all first received from IP from headers and creating markers
             if (($originalIpLocation.Response.Latitude -ne 0) -or ($originalIpLocation.Response.Longitude -ne 0))
@@ -69,11 +75,43 @@ function Create-FirstReceivedFromIPObject
                         }
 
                         $tempStartingIPObject = New-Object -TypeName PSObject -Property $props
-                        $StartingIPObject += $tempStartingIPObject
+                    }
+                }
+            }
+
+            $tempHeatMapObject = @()
+
+            if ($HeatMap)
+            {
+                #getting heat map markers, even though they switch may not be called
+                if (($originalIpLocation.Response.Latitude -ne 0) -or ($originalIpLocation.Response.Longitude -ne 0))
+                {
+                    if (![string]::IsNullOrWhiteSpace($originalIpLocation.Response.Latitude))
+                    {
+                        if (![string]::IsNullOrWhiteSpace($originalIpLocation.Response.Longitude))
+                        {
+                            $props = @{
+                                marker          = "new google.maps.LatLng($($originalIpLocation.Response.Latitude), $($originalIpLocation.Response.Longitude))"
+                                subject         = $msg.Subject
+                                SentFromAddress = $msg.SenderEmailAddress
+                                SentFromType    = $msg.SenderEmailType
+                                ReceivedTime    = $msg.ReceivedTime
+                                EmailBody       = $msg.Body
+                            }
+
+                            $tempHeatMapObject = New-Object -TypeName PSObject -Property $props
+                        }
                     }
                 }
             }
         }
+
+        $props = @{
+            FirstReceivedFromIP = $tempStartingIPObject
+            FirstReceivedFromIPHeatMap = $tempHeatMapObject
+        }
+
+        $ReturnObject = New-Object -TypeName PSObject -Property $props
     }
     End
     {

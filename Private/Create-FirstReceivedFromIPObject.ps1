@@ -46,7 +46,9 @@ function Create-FirstReceivedFromIPObject
         $originalmarker = @()
         $ReturnObject = @()
 
-        $msg = $MessageObject
+        $msg = ($MessageObject).MessageObject
+
+        $msg
     }
     Process
     {
@@ -68,7 +70,16 @@ function Create-FirstReceivedFromIPObject
                 {
                     #adding json markup data to object.  This will be passed to Get-PhishingGeoLocationStartingIps cmdlet
                     $props = @{
-                        marker          = "`{'title': '$($msg.subject -replace "'",' ')', 'lat': '$($originalIpLocation.Response.Latitude)', 'lng': '$($originalIpLocation.Response.Longitude)', 'description': '<div><div></div><h1>$($msg.Subject -replace "'",' ')</h1><div><p><b>Subject</b>: $($msg.Subject -replace "'",' ')</p><p><b>Received Time</b>: $($msg.ReceivedTime)</p><p><b>Sender Email Address</b>: $($msg.SenderEmailAddress)</p><p><b>Sender Email Type</b>: $($msg.SenderEmailType)</p><p><b>Phishing URL</b>: $($msg.URL.RawPhishingLink)</p></div></div>' }"
+                        marker          = "`{'title': '$($msg.subject -replace "'",' ')', `
+                                             'lat': '$($originalIpLocation.Response.Latitude)', `
+                                             'lng': '$($originalIpLocation.Response.Longitude)', `
+                                             'description': '<div><div></div><h1>$($msg.Subject -replace "'",' ')</h1><div><p><b> `
+                                              Subject</b>: $($msg.Subject -replace "'",' ')</p><p><b> `
+                                              Received Time</b>: $($msg.ReceivedTime)</p><p><b> `
+                                              Sender Email Address</b>: $($msg.SenderEmailAddress)</p><p><b> `
+                                              Sender Email Type</b>: $($msg.SenderEmailType)</p><p><b> `
+                                              Phishing URL</b>: $($msg.URL.RawPhishingLink)</p></div></div>' `
+                                              }"
                         subject         = $msg.Subject
                         SentFromAddress = $msg.SenderEmailAddress
                         SentFromType    = $msg.SenderEmailType

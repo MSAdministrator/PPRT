@@ -27,8 +27,20 @@ function Check-ARIN ()
     #Write-Debug -Message 'ipaddress: ' $ipaddress
     $regx = "[a-z0-9!#\$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#\$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?"
 
-    $rawdata = Invoke-WebRequest -Uri "http://rdap.arin.net/bootstrap/ip/$ipaddress" | ConvertFrom-Json
+    $rawdata = Invoke-RestMethod -Uri "http://rdap.arin.net/bootstrap/ip/$ipaddress"
 
+   <# $Handle = $rawdata.entities.handle
+
+    $HandleData = Invoke-RestMethod -Uri "https://rdap.arin.net/registry/entity/$Handle"
+
+    $VcardData = $(($HandleData.entities.vcardarray) | select -ExpandProperty SyncRoot)
+
+    $VcardEmailAddress = $VcardData | Select-String -Pattern $regx
+
+    $VcardMatches = $VcardEmailAddress.Matches.Value
+
+    return $VcardMatches#>
+ 
     for($i = 0;$i -lt ($rawdata.entities.vcardArray).count; $i++)
     {
         foreach ($item in $rawdata.entities.vcardArray.SyncRoot[$i])

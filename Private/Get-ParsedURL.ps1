@@ -33,7 +33,7 @@ function Get-ParsedURL ()
 
     if ($url -like $regexipv4)
     {
-        Write-LogEntry -type 'INFO' -message "URL is a IP Address - URL = $url" -Folder "$logpath\PPRTLog.txt"
+        $log = Write-LogEntry -type 'INFO' -message "URL is a IP Address - URL = $url" -Folder $logpath
         return $url
     }
 
