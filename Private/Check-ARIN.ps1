@@ -48,9 +48,9 @@ function Check-ARIN ()
             [array]$result += $item
         }
     }
-   # Write-Debug -Message 'check-arin result: ' $result
+
     $parsedresult = $result | Select-String -Pattern $regx
-    #Write-Debug -Message 'parsed result: ' $parsedresult
+
     if ($parsedresult.count -gt 0)
     {
         return $parsedresult

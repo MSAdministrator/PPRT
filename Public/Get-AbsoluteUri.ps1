@@ -5,7 +5,7 @@ function Get-AbsoluteUri
     param (
         [parameter(Mandatory = $true,
         HelpMessage = 'Please provide a .MSG file.')]
-        [PSTypeName('PPRT.PhishingURL')]
+        #[PSTypeName('PPRT.PhishingURL')]
         $URLObject,
 
         [Parameter(Mandatory=$true)]
@@ -37,21 +37,27 @@ function Get-AbsoluteUri
 
     Add-Type -AssemblyName System.Web
 
-    if ($URLObject.URL)
-    {
-        $url = $URLObject.URL -as [system.URI]
+   # if (($URLObject | Select -Property URL).URL)
+    #{
+       # $url = $URLObject.URL -as [system.URI]
 
-        if (($null -eq $url.AbsoluteURI -and $url.Scheme -match '[http|https]'))
+        $TempURL = $URLObject.URL
+       # $URLObject.URL -as [system.URI]
+     # write-host "URL:  $TempURL"
+    #    write-host "URL: $url"
+
+        if (($null -eq $TempURL.AbsoluteURI -and $TempURL.Scheme -match '[http|https]'))
         {
             $log = Write-LogEntry -type Error -message "Get-AbsoluteUri: URL is not the correct scheme" -Folder $LogPath
         }
 
         $log = Write-LogEntry -type Info -message "Get-AbsoluteUri: Creating WebRequest" -Folder $LogPath
-        
-        $encodedurl = [system.net.webrequest]::Create($url)
+       
+
+        $encodedurl = [system.net.webrequest]::Create($($TempURL))
         $Response = $null
-    }
-    else
+    
+  <#  else
     {
         $url = $URLObject -as [system.URI]
 
@@ -62,10 +68,10 @@ function Get-AbsoluteUri
 
         $log = Write-LogEntry -type Info -message "Get-AbsoluteUri: Creating WebRequest" -Folder $LogPath
 
-        $encodedurl = [system.net.webrequest]::Create($url)
+        $encodedurl = [system.net.webrequest]::Create($($url))
         $Response = $null
     }
-
+    #>
     try
     {
         $log = Write-LogEntry -type Info -message "Get-AbsoluteUri: Getting Response" -Folder $LogPath

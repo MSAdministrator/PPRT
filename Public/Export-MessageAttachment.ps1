@@ -1,14 +1,13 @@
 ﻿<#
 .Synopsis
-   Short description
+   This function will export message attachments included in a PPRT.Message Object Type Name
 .DESCRIPTION
-   Long description
+   This function will export attachments included in the a New-MessageObject.  You need to provide `
+   a message object for this function to work.
 .EXAMPLE
-   Example of how to use this cmdlet
-.EXAMPLE
-   Another example of how to use this cmdlet
+   $AttachmentObject = Extract-MessageAttachment -MessageObject $msg -LogPath $LogPath -FullDetails -SavePath $SaveLocation
 #>
-function Extract-MessageAttachment
+function Export-MessageAttachment
 {
     [CmdletBinding(DefaultParameterSetName='Full')]
     [OutputType([System.Collections.Hashtable],[String])]

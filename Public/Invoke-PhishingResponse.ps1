@@ -49,7 +49,9 @@ function Invoke-PhishingResponse
 	[CmdletBinding()]
     param (
         [parameter(Mandatory = $true,
-        HelpMessage = 'Please provide a .MSG file.')]
+                   HelpMessage = 'Please provide a .MSG file.',
+                   ValueFromPipelineByPropertyName=$true,
+                   ValueFromPipeline=$true)]
         [PSTypeName('PPRT.Message')]
         $Message,
 
@@ -61,10 +63,12 @@ function Invoke-PhishingResponse
         [switch]$ExtractAttachments,
 
         [Parameter(Mandatory = $true,
-                   ParameterSetName='VT')] 
+                   ParameterSetName='VT')]
+        [Parameter(Mandatory = $true,
+                   ParameterSetName='Map1')]
         [string]$SaveLocation,
 
-        [parameter(Mandatory = $false,
+        [parameter(Mandatory = $true,
                    HelpMessage = "Please provide a From email address",
                    ParameterSetName='Email')]
         [string]$From,
@@ -75,14 +79,21 @@ function Invoke-PhishingResponse
         $Subject,
 
 
-        [Parameter(Mandatory=$false,
-                   ValueFromPipelineByPropertyName=$true)]
+        [Parameter(Mandatory=$true,
+                   ValueFromPipelineByPropertyName=$true,
+                   ParameterSetName='Email')]
         [Alias('PSEmailServer')]
         [string]$SMTPServer = $PSEmailServer,
 
         [Parameter(Mandatory=$false,
-                   ValueFromPipelineByPropertyName=$true)]
+                   ValueFromPipelineByPropertyName=$true,
+                   ParameterSetName='Email')]
         [int]$SMTPPort = '25',
+
+        [Parameter(Mandatory=$false,
+                   ValueFromPipelineByPropertyName=$true,
+                   ParameterSetName='Email')]
+        [switch]$UseSSL,
 
         [parameter(Mandatory = $false,
                    HelpMessage = "Please provide a message Body. Default uses just the phishing URL.",
@@ -94,7 +105,7 @@ function Invoke-PhishingResponse
                    ParameterSetName='Email')]
         [switch]$BodyAsHTML,
 
-        [parameter(Mandatory = $false,
+        [parameter(Mandatory = $true,
                    HelpMessage = "Please provide a message Body. Default uses just the phishing URL.",
                    ParameterSetName='Email')]
         [System.Management.Automation.PSCredential]$Credential,
@@ -106,19 +117,18 @@ function Invoke-PhishingResponse
         [parameter(HelpMessage = "Provide this switch if you want to send additional notifications")]
         [switch]$AdditionalNotifications,
 
-        [parameter(ParameterSetName = 'Set1',
-        HelpMessage = 'Please select either AllReceivedFromIPMap or FirstReceivedFromIPMap')]
+        [parameter(HelpMessage = 'Please select either AllReceivedFromIPMap or FirstReceivedFromIPMap')]
         [ValidateNotNullOrEmpty()]
         [switch]$AllReceivedFromIPMap,
 
-        [parameter(ParameterSetName = 'Set2',
-        HelpMessage = 'Please select either AllReceivedFromIPMap or FirstReceivedFromIPMap')]
+        [parameter(HelpMessage = 'Please select either AllReceivedFromIPMap or FirstReceivedFromIPMap')]
         [ValidateNotNullOrEmpty()]
+        [Parameter(ParameterSetName='Map1')]
         [switch]$FirstReceivedFromIPMap,
 
-        [parameter(ParameterSetName = 'Set2',
-        HelpMessage = 'Please select either AllReceivedFromIPMap or FirstReceivedFromIPMap')]
+        [parameter(HelpMessage = 'Please select either AllReceivedFromIPMap or FirstReceivedFromIPMap')]
         [ValidateNotNullOrEmpty()]
+        [Parameter(ParameterSetName='Map1')]
         [switch]$FirstReceivedFromIPHeatMap
     ) 
 
@@ -144,7 +154,7 @@ function Invoke-PhishingResponse
                 if ($msg.Attachments)
                 {
                     #Call Extract-MessageAttachment
-                    $AttachmentObject = Extract-MessageAttachment -MessageObject $msg -LogPath $LogPath -FullDetails -SavePath $SaveLocation
+                    $AttachmentObject = Export-MessageAttachment -MessageObject $msg -LogPath $LogPath -FullDetails -SavePath $SaveLocation
 
                     $log = Write-LogEntry -type Info -message "Invoke-PhishingResponse: Attachment Extracted" -Folder $LogPath
   
@@ -168,59 +178,69 @@ function Invoke-PhishingResponse
             $log = Write-LogEntry -type Info -message "Invoke-PhishingResponse: Trying to identify Abuse Contact for $($msg.FullName)" -Folder $LogPath
 
             $AbuseContactObject = New-PPRTAbuseContactObject -URLObject $URLObject -LogPath $LogPath
-
-            if ($AbuseContactObject -eq $null)
+            
+            if ($AbuseContactObject.AbuseContact -notmatch 'NO POC FOR *')
             {
-                $log = Write-LogEntry -type Info -message "Invoke-PhishingResponse: New-PPRTAbuseContactObject did not return a value" -Folder $LogPath
-                continue
+
+                if ($AbuseContactObject -eq $null)
+                {
+                    $log = Write-LogEntry -type Info -message "Invoke-PhishingResponse: New-PPRTAbuseContactObject did not return a value" -Folder $LogPath
+                    continue
+                }
+
+                $Obj = @{}
+
+                if ($Null -ne $AbuseContactObject)
+                {
+                    $SendTo = @()
+                    
+                    foreach ($item in $AbuseContactObject.AbuseContact)
+                    {
+                        $SendTo += $($item)
+                    }
+
+                    $Obj.To = $($SendTo -join ',')
+                }
+                else
+                {
+                    $log = Write-LogEntry -type Error -message "Invoke-PhishingResponse: ABUSE CONTACT IS NULL" -Folder $LogPath -CustomMessage 'Break!'
+                    continue
+                }
+
+                if (!$Subject)
+                {
+                    $Obj.Subject = $msg.Subject
+                }
+
+                if (!$Body)
+                {
+                     $Obj.Body = $URLObject.URL
+                }
+
+                switch ($psboundparameters.keys) 
+                {
+                    'From'         { $Obj.From         = $From}
+                    'HTMLBody'     { $Obj.BodyAsHTML   = $BodyAsHTML}
+                    'BCC'          { $Obj.BCC          = $BCC}
+                    'CC'           { $Obj.CC           = $CC}
+                    'Subject'      { $Obj.Subject      = $Subject}
+                    'Priority'     { $Obj.Priority     = $Priority}
+                    'UseSSL'       { $Obj.UseSSL       = $UseSSL}
+                    'Encoding'     { $Obj.Encoding     = $Encoding}
+                    'Credential'   { $Obj.Credential   = $Credential}
+                    'SMTPServer'   { $Obj.SMTPServer   = $SMTPServer}
+                    'SMTPPort'     { $Obj.SMTPPort     = $SMTPPort}
+                    'URL'          { $Obj.URL          = $AbuseContactObject.URL }
+                }
+
+                $NotificationObject = @()
+
+                $log = Write-LogEntry -type Info -message "Invoke-PhishingResponse: Attempting to send notifications - $($Obj)" -Folder $LogPath
+
+                $NotificationObject = Send-MailMessage @Obj
+
+                $PhishingResponseObject.Notification = $NotificationObj 
             }
-
-            $Obj = @{}
-
-            if ($Null -ne $AbuseContactObject)
-            {
-                $Obj.TO = $(($AbuseContactObject.AbuseContact) -join ';')
-            }
-            else
-            {
-                $log = Write-LogEntry -type Error -message "Invoke-PhishingResponse: ABUSE CONTACT IS NULL" -Folder $LogPath -CustomMessage 'Break!'
-                break
-            }
-
-            if (!$Subject)
-            {
-                $Obj.Subject = $msg.Subject
-            }
-
-            if (!$Body)
-            {
-                 $Obj.Body = $URLObject.URL
-            }
-
-            switch ($psboundparameters.keys) 
-            {
-                'From'         { $Obj.From         = $From}
-                'Body'         { $Obj.Body         = $Body}
-                'HTMLBody'     { $Obj.BodyAsHTML   = $BodyAsHTML}
-                'BCC'          { $Obj.BCC          = $BCC}
-                'CC'           { $Obj.CC           = $CC}
-                'Subject'      { $Obj.Subject      = $Subject}
-                'Priority'     { $Obj.Priority     = $Priority}
-                'UseSSL'       { $Obj.UseSSL       = $UseSSL}
-                'Encoding'     { $Obj.Encoding     = $Encoding}
-                'Credential'   { $Obj.Credential   = $Credential}
-                'SMTPServer'   { $Obj.SMTPServer   = $SMTPServer}
-                'SMTPPort'     { $Obj.SMTPPort     = $SMTPPort}
-                'URL'          { $Obj.URL          = $AbuseContactObject.URL }
-            }
-
-            $NotificationObject = @()
-
-            $log = Write-LogEntry -type Info -message "Invoke-PhishingResponse: Attempting to send notifications" -Folder $LogPath
-
-            $NotificationObject = Send-MailMessage @Obj
-
-            $PhishingResponseObject.Notification = $NotificationObj 
 
             $props = @{
                 MSG = $msg
@@ -249,23 +269,27 @@ function Invoke-PhishingResponse
             else
             {
                 $log = Write-LogEntry -type Info -message "Invoke-PhishingResponse: Creating New First Received From IP Map Object" -Folder $LogLocation
-                $FirstReceivedFromIPObject = New-FirstReceivedFromIPObject -MessageObject $Message
-            }     
+                $FirstReceivedFromIPObject = New-FirstReceivedFromIPObject -MessageObject $Message -SavePath $SaveLocation
+            }
+
+            $MainObject.FirstReceivedFromIPObject = $FirstReceivedFromIPObject   
         }
-                
+        
 
         #getting data for MapAllIPs Google Maps API Polyline output
         if ($AllReceivedFromIPMap)
         {
             $AllReceivedFromIPObject = Create-AllReceivedFromIPObject -MessageObject $MainObject -SavePath $LogLocation
+
+            $MainObject.AllReceivedFromIPObject = $AllReceivedFromIPObject 
         }
 
     }
     End
     {
         #stop outlook process if still open from send emails using Outlook.Application COM Object
-        Start-Sleep -Seconds 3
-        Get-Process -Name Outlook | Stop-Process
+       # Start-Sleep -Seconds 3
+      #  Get-Process -Name Outlook | Stop-Process
 
         return $MainObject
     }

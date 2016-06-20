@@ -49,17 +49,17 @@ function New-FirstReceivedFromIPObject
     {
         switch ($PSBoundParameters.Keys)
         {
-            'MessageObject' { $msg = $MessageObject.Headers }
+            'MessageObject' { $msg = $MessageObject }
             'EmailHeader'   { if($null -ne $EmailHeader)
-                              { $MessageObject = $EmailHeader }
+                              { $msg = $EmailHeader }
                               else
                               { Write-Warning 'Please provide Email Headers'; break }
                             }
         }
 
-        foreach($item in $MessageObject)
+        foreach($item in $msg)
         {
-            $firstReceivedFromIP = (Parse-EmailHeader -InputFileName $Item.Header).From | `
+            $firstReceivedFromIP = (Parse-EmailHeader -InputFileName $item.Header).From | `
                                         Select-String -Pattern $regex -AllMatches | `
                                             ForEach-Object -Process { $_.Matches } | `
                                                 ForEach-Object -Process { $_.Value }
@@ -88,11 +88,11 @@ function New-FirstReceivedFromIPObject
                                                   Sender Email Type</b>: $($item.SenderEmailType)</p><p><b> `
                                                   Phishing URL</b>: $($item.URL.RawPhishingLink)</p></div></div>' `
                                                   }"
-                            subject         = $msg.Subject
-                            SentFromAddress = $msg.SenderEmailAddress
-                            SentFromType    = $msg.SenderEmailType
-                            ReceivedTime    = $msg.ReceivedTime
-                            EmailBody       = $msg.Body
+                            subject         = $item.Subject
+                            SentFromAddress = $item.SenderEmailAddress
+                            SentFromType    = $item.SenderEmailType
+                            ReceivedTime    = $item.ReceivedTime
+                            EmailBody       = $item.Body
                         }
 
                         $tempStartingIPObject = New-Object -TypeName PSObject -Property $props
@@ -113,11 +113,11 @@ function New-FirstReceivedFromIPObject
                         {
                             $props = @{
                                 marker          = "new google.maps.LatLng($($originalIpLocation.Response.Latitude), $($originalIpLocation.Response.Longitude))"
-                                subject         = $msg.Subject
-                                SentFromAddress = $msg.SenderEmailAddress
-                                SentFromType    = $msg.SenderEmailType
-                                ReceivedTime    = $msg.ReceivedTime
-                                EmailBody       = $msg.Body
+                                subject         = $item.Subject
+                                SentFromAddress = $item.SenderEmailAddress
+                                SentFromType    = $item.SenderEmailType
+                                ReceivedTime    = $item.ReceivedTime
+                                EmailBody       = $item.Body
                             }
 
                             $tempHeatMapObject = New-Object -TypeName PSObject -Property $props

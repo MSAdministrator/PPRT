@@ -1,12 +1,21 @@
 ﻿<#
 .Synopsis
-   Short description
+   This function gathers details about a message.  `
+   The default properties are the message fullname and the header(s) of that message
 .DESCRIPTION
-   Long description
+   This function gathers details about a message that you can use for other purposes but `
+   it is the primary function for the rest of the Posh-PPRT PowerShell Module.
 .EXAMPLE
-   Example of how to use this cmdlet
+   PS C:\windows\system32> $MsgObject = @()
+   PS C:\windows\system32> $MsgObject = New-MessageObject -Message C:\PHISHING_EMAILS -LogPath C:\PHISHING_EMAILS -FullDetails
+   PS C:\windows\system32> $MsgObject.Header
+                           This property will display the email header of the message that has been processed
+   PS C:\windows\system32> $MsgObject | Get-Member -MemberType NoteProperty
+
 .EXAMPLE
-   Another example of how to use this cmdlet
+   PS C:\windows\system32> $MsgObject = @()
+   PS C:\windows\system32> $MsgObject = New-MessageObject -Message C:\PHISHING_EMAILS -LogPath C:\PHISHING_EMAILS -FullDetails
+   PS C:\windows\system32> $MsgObject | Invoke-PhishingResponse -
 #>
 function New-MessageObject
 {
