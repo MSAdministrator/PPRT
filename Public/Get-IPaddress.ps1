@@ -4,10 +4,10 @@ function Get-IPaddress ()
     [CmdletBinding()]
     param (
         [parameter(Mandatory = $true,
-                   HelpMessage = 'Please provide a valid HOSTNAME')]
+        HelpMessage = 'Please provide a valid HOSTNAME')]
         $hostname,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         $LogPath
     ) 
     <#

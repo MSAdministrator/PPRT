@@ -1,5 +1,5 @@
-﻿#requires -Version 3
-function Get-AbsoluteUri
+﻿#requires -Version 2
+function Expand-ShortURL
 {
     [CmdletBinding()]
     param (
@@ -9,33 +9,33 @@ function Get-AbsoluteUri
         $URLObject
     ) 
     <#
-        .SYNOPSIS 
-        Takes a short url and converts it to a long url
+            .SYNOPSIS 
+            Takes a short url and converts it to a long url
 
-        .DESCRIPTION
-        This function takes a tinyurl and converts it to a long/normal URL using the System.Net.WebRequest class.
-        This function will continue to call itself until the URL has been expanded successfully.
+            .DESCRIPTION
+            This function takes a tinyurl and converts it to a long/normal URL using the System.Net.WebRequest class.
+            This function will continue to call itself until the URL has been expanded successfully.
 
-        .PARAMETER shorturl   
-        This parameter needs to be a TinyUrl at this time.
+            .PARAMETER shorturl   
+            This parameter needs to be a TinyUrl at this time.
 
-        .PARAMETER logpath   
-        This parameter is a folder path that you want to log to
+            .PARAMETER logpath   
+            This parameter is a folder path that you want to log to
 
-        .EXAMPLE
-        C:\PS> Get-LongUrl -shorturl $shortUrlVariable -logpath $logpath
+            .EXAMPLE
+            C:\PS> Get-LongUrl -shorturl $shortUrlVariable -logpath $logpath
 
     #>
 
     Add-Type -AssemblyName System.Web
 
-    if ($URLObject | select -Property URL)
+    if ($URLObject | Select-Object -Property URL)
     {
         $url = $URLObject.URL -as [system.URI]
 
-        if (!($url.AbsoluteURI -ne $null -and $url.Scheme -match '[http|https]'))
+        if (!($uri.AbsoluteURI -ne $null -and $url.Scheme -match '[http|https]'))
         {
-            Write-Error 'URL is not formatted correctly'
+            exit
         }
 
         $encodedurl = [system.net.webrequest]::Create($url)
@@ -44,9 +44,9 @@ function Get-AbsoluteUri
     {
         $url = $URLObject.URL -as [system.URI]
 
-        if (!($url.AbsoluteURI -ne $null -and $url.Scheme -match '[http|https]'))
+        if (!($uri.AbsoluteURI -ne $null -and $url.Scheme -match '[http|https]'))
         {
-            Write-Error 'URL is not formatted correctly'
+            exit
         }
 
         $encodedurl = [system.net.webrequest]::Create($url)
@@ -55,20 +55,19 @@ function Get-AbsoluteUri
     $AbsoluteURL = $encodedurl.GetResponse().ResponseUri.AbsoluteUri
     $URLAuthority = $encodedurl.GetResponse().ResponseUri.Authority
 
-    Import-Clixml -Path "$(Split-Path $Script:MyInvocation.MyCommand.Path)\Private\shorturls.xml" | ForEach-Object {
+    Import-Clixml -Path "$(Split-Path -Path $Script:MyInvocation.MyCommand.Path)\Private\shorturls.xml" | ForEach-Object -Process {
         if ($AbsoluteURL -like '$_')
         {
             #call Get-LongUrl to call API to resolve to the normal/long url
             $ExpandedURL = Add-ObjectDetail -InputObject $AbsoluteURL -TypeName PPRT.PhishingURL
             $FinalURL = Expand-ShortURL $ExpandedURL
-            
         }
     }
 
     $props = @{
-        OriginalURL = $URLObject
-        EncodedURL = $encodedurl
-        AbsoluteURL = $AbsoluteURL
+        OriginalURL  = $URLObject
+        EncodedURL   = $encodedurl
+        AbsoluteURL  = $AbsoluteURL
         URLAuthority = $URLAuthority
     }
 

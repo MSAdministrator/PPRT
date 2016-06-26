@@ -1,5 +1,5 @@
 ﻿#requires -Version 3
-function Check-APNIC ()
+function Connect-APNIC ()
 {
     [CmdletBinding()]
     param (

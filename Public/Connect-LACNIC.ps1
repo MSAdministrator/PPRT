@@ -1,5 +1,5 @@
 ﻿#requires -Version 3
-function Check-LACNIC ()
+function Connect-LACNIC ()
 {
     [CmdletBinding()]
     param (

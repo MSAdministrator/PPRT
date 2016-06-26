@@ -4,11 +4,11 @@ function Get-ParsedURL ()
     [CmdletBinding()]
     param (
         [parameter(Mandatory = $true,
-                   HelpMessage = 'Please provide a URL to parse')]
+        HelpMessage = 'Please provide a URL to parse')]
         $url,
 
         [parameter(Mandatory = $true,
-                   HelpMessage = 'Please provide a log path.')]
+        HelpMessage = 'Please provide a log path.')]
         $logpath
     ) 
     <#
@@ -43,8 +43,8 @@ function Get-ParsedURL ()
     $URLAuthoirty = $ParsedURL.GetResponse().ResponseUri.Authority
 
     $props = @{
-        OriginalURL = $url
-        AbsoluteURL = $AbsoluteURL
+        OriginalURL  = $url
+        AbsoluteURL  = $AbsoluteURL
         URLAuthority = $URLAuthoirty
     }
 

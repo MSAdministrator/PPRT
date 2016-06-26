@@ -1,51 +1,52 @@
-﻿<#
-.Synopsis
-   This function will export message attachments included in a PPRT.Message Object Type Name
-.DESCRIPTION
-   This function will export attachments included in the a New-MessageObject.  You need to provide `
-   a message object for this function to work.
-.EXAMPLE
-   $AttachmentObject = Extract-MessageAttachment -MessageObject $msg -LogPath $LogPath -FullDetails -SavePath $SaveLocation
+﻿#requires -Version 4
+<#
+        .Synopsis
+        This function will export message attachments included in a PPRT.Message Object Type Name
+        .DESCRIPTION
+        This function will export attachments included in the a New-MessageObject.  You need to provide `
+        a message object for this function to work.
+        .EXAMPLE
+        $AttachmentObject = Extract-MessageAttachment -MessageObject $msg -LogPath $LogPath -FullDetails -SavePath $SaveLocation
 #>
 function Export-MessageAttachment
 {
-    [CmdletBinding(DefaultParameterSetName='Full')]
+    [CmdletBinding(DefaultParameterSetName = 'Full')]
     [OutputType([System.Collections.Hashtable],[String])]
     Param
     (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [PSTypeName('PPRT.Message')]
         $MessageObject,
         
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         $LogPath,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         $SavePath,
 
-        [Parameter(ParameterSetName='Full')]
+        [Parameter(ParameterSetName = 'Full')]
         [switch]$FullDetails,
 
-        [Parameter(ParameterSetName='Partial')]
+        [Parameter(ParameterSetName = 'Partial')]
         [switch]$GetFileHash,
 
-        [Parameter(ParameterSetName='Partial')]
+        [Parameter(ParameterSetName = 'Partial')]
         [switch]$DisplayName,
-        [Parameter(ParameterSetName='Partial')]
+        [Parameter(ParameterSetName = 'Partial')]
         [switch]$FileName,
-        [Parameter(ParameterSetName='Partial')]
+        [Parameter(ParameterSetName = 'Partial')]
         [switch]$Index,
-        [Parameter(ParameterSetName='Partial')]
+        [Parameter(ParameterSetName = 'Partial')]
         [switch]$Position,
-        [Parameter(ParameterSetName='Partial')]
+        [Parameter(ParameterSetName = 'Partial')]
         [switch]$Type,
-        [Parameter(ParameterSetName='Partial')]
+        [Parameter(ParameterSetName = 'Partial')]
         [switch]$Size,
-        [Parameter(ParameterSetName='Partial')]
+        [Parameter(ParameterSetName = 'Partial')]
         [switch]$MIMEType,
-        [Parameter(ParameterSetName='Partial')]
+        [Parameter(ParameterSetName = 'Partial')]
         [switch]$AttachedMethod,
-        [Parameter(ParameterSetName='Partial')]
+        [Parameter(ParameterSetName = 'Partial')]
         [switch]$AttachContentID
     )
     Begin
@@ -59,7 +60,7 @@ function Export-MessageAttachment
             try
             {
                 $log = Write-LogEntry -type Info -message "Extract-MessageAttachment: Creating new Attachment Save Path - $SavePath" -Folder $LogPath
-                New-Item "$SavePath" -ItemType Directory -Force 
+                New-Item -Path "$SavePath" -ItemType Directory -Force 
             }
             catch
             {
@@ -70,28 +71,26 @@ function Export-MessageAttachment
     }
     Process
     {
-        $MessageObject | ForEach-Object -Process { 
-            
+        $MessageObject | ForEach-Object -Process {
             $msgFn = $_.FullName
 
             $log = Write-LogEntry -type Info -message "Extract-MessageAttachment: Processing Message - $msgFn" -Folder $LogPath
 
-            if ($msgFn -notlike "*.msg")
+            if ($msgFn -notlike '*.msg')
             {
-                $log = Write-LogEntry -type Error -message "Extract-MessageAttachment: MSG is not a .MSG file" -Folder $LogPath
+                $log = Write-LogEntry -type Error -message 'Extract-MessageAttachment: MSG is not a .MSG file' -Folder $LogPath
                 break
             }
             else
             {
-                $msg = $outlook.CreateItemFromTemplate($msgFn)
+                $msg = $Outlook.CreateItemFromTemplate($msgFn)
 
                 $msg.Attachments | ForEach-Object -Process {
-                    
                     $AttachmentPath = "$LogPath\$($_.FileName)"
 
-                    Add-Member -InputObject $Obj -MemberType NoteProperty -Name Attachment -Value $AttachmentPath -Force
+                    Add-Member -InputObject $obj -MemberType NoteProperty -Name Attachment -Value $AttachmentPath -Force
             
-                    if (!(Test-Path -literalPath $AttachmentPath))
+                    if (!(Test-Path -LiteralPath $AttachmentPath))
                     {
                         $_.SaveAsFile($AttachmentPath)
                     }
@@ -99,11 +98,13 @@ function Export-MessageAttachment
 
                 if ($psboundparameters.Keys -contains 'FullDetails')
                 {   
-                    $log = Write-LogEntry -type Info -message "Extract-MessageAttachment: Getting Full Details of Attachment" -Folder $LogPath
+                    $log = Write-LogEntry -type Info -message 'Extract-MessageAttachment: Getting Full Details of Attachment' -Folder $LogPath
 
                     $temp = $msg
 
-                    $propertyNames = $temp | Get-Member -MemberType Properties | Select-Object -ExpandProperty Name
+                    $propertyNames = $temp |
+                    Get-Member -MemberType Properties |
+                    Select-Object -ExpandProperty Name
 
                     foreach ($property in $propertyNames)
                     {  
@@ -112,58 +113,83 @@ function Export-MessageAttachment
                             $t.$property
                         }
 
-                        $Obj | Add-Member -MemberType NoteProperty -Name $property -Value $value
+                        $obj | Add-Member -MemberType NoteProperty -Name $property -Value $value
                     }
 
                     $MIMEType = $msg.PropertyAccessor.GetProperty('http://schemas.microsoft.com/mapi/proptag/0x370E001F') 
-                    Add-Member -InputObject $Obj -MemberType NoteProperty -Name MIMEType -Value $MIMEType -Force
+                    Add-Member -InputObject $obj -MemberType NoteProperty -Name MIMEType -Value $MIMEType -Force
 
                     $AttachedMethod = $msg.PropertyAccessor.GetProperty('http://schemas.microsoft.com/mapi/proptag/0x37050003') 
-                    Add-Member -InputObject $Obj -MemberType NoteProperty -Name AttachedMethod -Value $AttachedMethod -Force
+                    Add-Member -InputObject $obj -MemberType NoteProperty -Name AttachedMethod -Value $AttachedMethod -Force
 
                     $AttachContentID = $msg.PropertyAccessor.GetProperty('http://schemas.microsoft.com/mapi/proptag/0x3712001E') 
-                    Add-Member -InputObject $Obj -MemberType NoteProperty -Name AttachContentID -Value $AttachContentID -Force
+                    Add-Member -InputObject $obj -MemberType NoteProperty -Name AttachContentID -Value $AttachContentID -Force
 
-                    Add-Member -InputObject $Obj -MemberType NoteProperty -Name SavePath -Value $AttachmentPath -Force
+                    Add-Member -InputObject $obj -MemberType NoteProperty -Name SavePath -Value $AttachmentPath -Force
                 
                     $AttachmentHash = Get-FileHash -Path $AttachmentPath
-                    Add-Member -InputObject $Obj -MemberType NoteProperty -Name Hash -Value $AttachmentHash -Force
+                    Add-Member -InputObject $obj -MemberType NoteProperty -Name Hash -Value $AttachmentHash -Force
 
-                    $log = Write-LogEntry -type Info -message "Extract-MessageAttachment: Processing of Full Details Complete!" -Folder $LogPath
+                    $log = Write-LogEntry -type Info -message 'Extract-MessageAttachment: Processing of Full Details Complete!' -Folder $LogPath
 
-                    Add-ObjectDetail -InputObject $Obj -TypeName PPRT.Attachment
+                    Add-ObjectDetail -InputObject $obj -TypeName PPRT.Attachment
                 }
                 else
                 {
-                    $Obj = @{}
+                    $obj = @{}
 
                     $psboundparameters.Keys
                     switch ($psboundparameters.keys) 
                     {
-                        'DisplayName'             { $Obj.DisplayName     = $msg.DisplayName }
-                        'FileName'                { $Obj.FileName        = $msg.FileName}
-                        'Index'                   { $Obj.Index           = $msg.Index}
-                        'Position'                { $Obj.Position        = $msg.Position}
-                        'Type'                    { $Obj.Type            = $msg.Type}
-                        'Size'                    { $Obj.Size            = $msg.Size}
-                        'MIMEType'                { $obj.MIMEType        = $msg.PropertyAccessor.GetProperty('http://schemas.microsoft.com/mapi/proptag/0x370E001F') }
-                        'AttachedMethod'          { $Obj.AttachedMethod  = $msg.PropertyAccessor.GetProperty('http://schemas.microsoft.com/mapi/proptag/0x37050003') }
-                        'AttachContentID'         { $Obj.AttachContentID = $msg.PropertyAccessor.GetProperty('http://schemas.microsoft.com/mapi/proptag/0x3712001E') }
-                        'GetFileHash'             { $Obj.Hash            = $(Get-FileHash -Path $AttachmentPath) }
+                        'DisplayName'             
+                        {
+                            $obj.DisplayName     = $msg.DisplayName 
+                        }
+                        'FileName'                
+                        {
+                            $obj.FileName        = $msg.FileName
+                        }
+                        'Index'                   
+                        {
+                            $obj.Index           = $msg.Index
+                        }
+                        'Position'                
+                        {
+                            $obj.Position        = $msg.Position
+                        }
+                        'Type'                    
+                        {
+                            $obj.Type            = $msg.Type
+                        }
+                        'Size'                    
+                        {
+                            $obj.Size            = $msg.Size
+                        }
+                        'MIMEType'                
+                        {
+                            $obj.MIMEType        = $msg.PropertyAccessor.GetProperty('http://schemas.microsoft.com/mapi/proptag/0x370E001F') 
+                        }
+                        'AttachedMethod'          
+                        {
+                            $obj.AttachedMethod  = $msg.PropertyAccessor.GetProperty('http://schemas.microsoft.com/mapi/proptag/0x37050003') 
+                        }
+                        'AttachContentID'         
+                        {
+                            $obj.AttachContentID = $msg.PropertyAccessor.GetProperty('http://schemas.microsoft.com/mapi/proptag/0x3712001E') 
+                        }
+                        'GetFileHash'             
+                        {
+                            $obj.Hash            = $(Get-FileHash -Path $AttachmentPath) 
+                        }
                     }
 
-                    $log = Write-LogEntry -type Info -message "Extract-MessageAttachment: Getting Selected Details of Attachment" -Folder $LogPath
+                    $log = Write-LogEntry -type Info -message 'Extract-MessageAttachment: Getting Selected Details of Attachment' -Folder $LogPath
 
-                    Add-Member -InputObject $Obj -MemberType NoteProperty -Name SavePath -Value $AttachmentPath -Force
+                    Add-Member -InputObject $obj -MemberType NoteProperty -Name SavePath -Value $AttachmentPath -Force
 
-                    Add-ObjectDetail -InputObject $Obj -TypeName PPRT.Attachment
+                    Add-ObjectDetail -InputObject $obj -TypeName PPRT.Attachment
                 }
-
-
             }
-            
-
-            
         }
     }
     End

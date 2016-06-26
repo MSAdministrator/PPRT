@@ -1,7 +1,8 @@
-#requires -Version 2
+#requires -Modules Posh-VirusTotal
+#requires -Version 4
 function Send-PhishingNotifications ()
 {
-	[CmdletBinding()]
+    [CmdletBinding()]
     param (
         [parameter(Mandatory = $true,
         HelpMessage = 'Please provide a .MSG file.')]
@@ -15,12 +16,12 @@ function Send-PhishingNotifications ()
         HelpMessage = "Please provide a 'Send On Behalf of' email address")]
         $From,
 
-        [parameter(ParameterSetName='VT',
-        HelpMessage = "Please include the VirusTotal switch to scan files against VT API.")]
+        [parameter(ParameterSetName = 'VT',
+        HelpMessage = 'Please include the VirusTotal switch to scan files against VT API.')]
         [switch]$VirusTotal,
 
-        [parameter(ParameterSetName='VT',
-        HelpMessage = "Please provide your Virus Total API Key")]
+        [parameter(ParameterSetName = 'VT',
+        HelpMessage = 'Please provide your Virus Total API Key')]
         $VTAPIKey
     ) 
 
@@ -72,7 +73,7 @@ function Send-PhishingNotifications ()
             if ($VTFileReport.ResponseCode -eq 1)
             {
                 $result = [System.Windows.Forms.MessageBox]::Show("The following SHA256 hash was already been submitted to VirusTotal.`n $hash", 'Warning', 'Ok', 'Warning')
-                Write-LogEntry -type Info -message "VirusTotal Submission" -Folder $logpath -CustomMessage "Hash has been previously submitted to VirusTotal: $hash"
+                Write-LogEntry -type Info -message 'VirusTotal Submission' -Folder $logpath -CustomMessage "Hash has been previously submitted to VirusTotal: $hash"
             }
             if ($VTFileReport.ResponseCode -eq 0)
             {
@@ -90,7 +91,7 @@ function Send-PhishingNotifications ()
 
     #if the url string has a 'shorturl' from the "shorturls.xml" file, then process seperately
     #shorturls is a static list created from longurl.org\services
-    Import-Clixml -Path "$(Split-Path $Script:MyInvocation.MyCommand.Path)\Private\shorturls.xml" | ForEach-Object {
+    Import-Clixml -Path "$(Split-Path -Path $Script:MyInvocation.MyCommand.Path)\Private\shorturls.xml" | ForEach-Object -Process {
         if ($url -like '$_')
         {
             #call Get-LongUrl to call API to resolve to the normal/long url
@@ -108,9 +109,9 @@ function Send-PhishingNotifications ()
      
     if ($shorturl -eq $false)
     {
-            #if no 'tinyurl' then parse as normal
-            $parsedurl = Get-ParsedURL $url
-            [array]$ipaddress = Get-IPaddress $parsedurl
+        #if no 'tinyurl' then parse as normal
+        $parsedurl = Get-ParsedURL $url
+        [array]$ipaddress = Get-IPaddress $parsedurl
     }
 
     #for each ipaddress returned from above else statement
@@ -159,9 +160,9 @@ function Send-PhishingNotifications ()
         }
     }
     #additionally, send to IronPort and Anti-Phishing Working Group email distribution list
-	Send-ToIronPort -originallink $url -messagetoattach $messagetoparse -From $From
+    Send-ToIronPort -originallink $url -messagetoattach $messagetoparse -From $From
 	
-	Send-ToAntiPhishingGroup -trimmedlink $url.Trim('http://') -From $From
+    Send-ToAntiPhishingGroup -trimmedlink $url.Trim('http://') -From $From
 
     $logpath = "$($logpath)\get_whois.log"
     $logvalue = "$(Get-Date);$url;$parsedurl;$([array]$ipaddress[0]);$whoisdb;$abusecontact;$messagetoparse;"

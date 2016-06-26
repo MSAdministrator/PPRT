@@ -1,12 +1,13 @@
-﻿<#
-.Synopsis
-   Short description
-.DESCRIPTION
-   Long description
-.EXAMPLE
-   Example of how to use this cmdlet
-.EXAMPLE
-   Another example of how to use this cmdlet
+﻿#requires -Version 3
+<#
+        .Synopsis
+        Short description
+        .DESCRIPTION
+        Long description
+        .EXAMPLE
+        Example of how to use this cmdlet
+        .EXAMPLE
+        Another example of how to use this cmdlet
 #>
 function New-FirstReceivedFromIPObject
 {
@@ -15,23 +16,23 @@ function New-FirstReceivedFromIPObject
     [OutputType([int])]
     Param
     (
-        [Parameter(Mandatory=$true,
-                   ValueFromPipelineByPropertyName=$true,
-                   ParameterSetName='MessageObject')]
+        [Parameter(Mandatory = $true,
+                ValueFromPipelineByPropertyName = $true,
+        ParameterSetName = 'MessageObject')]
         [PSTypeName('PPRT.Message')]
         $MessageObject,
 
-        [Parameter(Mandatory=$true,
-                   ValueFromPipelineByPropertyName=$true,
-                   ParameterSetName='EmailHeader')]
+        [Parameter(Mandatory = $true,
+                ValueFromPipelineByPropertyName = $true,
+        ParameterSetName = 'EmailHeader')]
         $EmailHeader,
 
-        [Parameter(Mandatory=$true,
-                   ValueFromPipelineByPropertyName=$true)]
+        [Parameter(Mandatory = $true,
+        ValueFromPipelineByPropertyName = $true)]
         $SavePath,
 
-        [Parameter(Mandatory=$false,
-                   ValueFromPipelineByPropertyName=$true)]
+        [Parameter(Mandatory = $false,
+        ValueFromPipelineByPropertyName = $true)]
         [switch]$HeatMap
     )
 
@@ -49,20 +50,37 @@ function New-FirstReceivedFromIPObject
     {
         switch ($PSBoundParameters.Keys)
         {
-            'MessageObject' { $msg = $MessageObject }
-            'EmailHeader'   { if($null -ne $EmailHeader)
-                              { $msg = $EmailHeader }
-                              else
-                              { Write-Warning 'Please provide Email Headers'; break }
-                            }
+            'MessageObject' 
+            {
+                $msg = $MessageObject 
+            }
+            'EmailHeader'   
+            {
+                if($null -ne $EmailHeader)
+                {
+                    $msg = $EmailHeader 
+                }
+                else
+                {
+                    Write-Warning -Message 'Please provide Email Headers'
+                    break
+                }
+            }
         }
 
         foreach($item in $msg)
         {
-            $firstReceivedFromIP = (Parse-EmailHeader -InputFileName $item.Header).From | `
-                                        Select-String -Pattern $regex -AllMatches | `
-                                            ForEach-Object -Process { $_.Matches } | `
-                                                ForEach-Object -Process { $_.Value }
+            $firstReceivedFromIP = (Parse-EmailHeader -InputFileName $item.Header).From |
+            `
+            Select-String -Pattern $regex -AllMatches |
+            `
+            ForEach-Object -Process {
+                $_.Matches 
+            } |
+            `
+            ForEach-Object -Process {
+                $_.Value 
+            }
             
             #calling first received from header returned from parse-emailheader. Location is [0]
             $originalIpLocation = Invoke-RestMethod -Uri "http://freegeoip.net/xml/$($firstReceivedFromIP[0])"
@@ -79,15 +97,15 @@ function New-FirstReceivedFromIPObject
                         #adding json markup data to object.  This will be passed to Get-PhishingGeoLocationStartingIps cmdlet
                         $props = @{
                             marker          = "`{'title': '$($item.subject -replace "'",' ')', `
-                                                 'lat': '$($originalIpLocation.Response.Latitude)', `
-                                                 'lng': '$($originalIpLocation.Response.Longitude)', `
-                                                 'description': '<div><div></div><h1>$($item.Subject -replace "'",' ')</h1><div><p><b> `
-                                                  Subject</b>: $($item.Subject -replace "'",' ')</p><p><b> `
-                                                  Received Time</b>: $($item.ReceivedTime)</p><p><b> `
-                                                  Sender Email Address</b>: $($item.SenderEmailAddress)</p><p><b> `
-                                                  Sender Email Type</b>: $($item.SenderEmailType)</p><p><b> `
-                                                  Phishing URL</b>: $($item.URL.RawPhishingLink)</p></div></div>' `
-                                                  }"
+                                'lat': '$($originalIpLocation.Response.Latitude)', `
+                                'lng': '$($originalIpLocation.Response.Longitude)', `
+                                'description': '<div><div></div><h1>$($item.Subject -replace "'",' ')</h1><div><p><b> `
+                                Subject</b>: $($item.Subject -replace "'",' ')</p><p><b> `
+                                Received Time</b>: $($item.ReceivedTime)</p><p><b> `
+                                Sender Email Address</b>: $($item.SenderEmailAddress)</p><p><b> `
+                                Sender Email Type</b>: $($item.SenderEmailType)</p><p><b> `
+                                Phishing URL</b>: $($item.URL.RawPhishingLink)</p></div></div>' `
+                            }"
                             subject         = $item.Subject
                             SentFromAddress = $item.SenderEmailAddress
                             SentFromType    = $item.SenderEmailType
@@ -127,7 +145,7 @@ function New-FirstReceivedFromIPObject
             }
 
             $props = @{
-                FirstReceivedFromIP = $tempStartingIPObject
+                FirstReceivedFromIP        = $tempStartingIPObject
                 FirstReceivedFromIPHeatMap = $tempHeatMapObject
             }
 

@@ -17,10 +17,10 @@ Foreach($import in @($Public + $Private))
 }
 
 #download and import POSH-VirusTotal
-if (!(Test-Path "$Home\Documents\WindowsPowerShell\Modules\Posh-VirusTotal"))
+if (!(Test-Path -Path "$Home\Documents\WindowsPowerShell\Modules\Posh-VirusTotal"))
 {
-    Write-Verbose "Downloading Posh-VirusTotal PowerShell Module...."
-    iex (New-Object Net.WebClient).DownloadString("https://gist.githubusercontent.com/darkoperator/9138373/raw/22fb97c07a21139a398c2a3d6ca7e3e710e476bc/PoshVTInstall.ps1")
+    Write-Verbose -Message 'Downloading Posh-VirusTotal PowerShell Module....'
+    Invoke-Expression -Command (New-Object -TypeName Net.WebClient).DownloadString('https://gist.githubusercontent.com/darkoperator/9138373/raw/22fb97c07a21139a398c2a3d6ca7e3e710e476bc/PoshVTInstall.ps1')
 }
 
 Export-ModuleMember -Function $Public.Basename

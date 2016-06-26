@@ -41,7 +41,10 @@ function Get-PhishingGeoLocationAllIPs
 
 
 
-    var markers = [ $(foreach ($item in $AllIPData){ "$($item.marker)," }) ];
+    var markers = [ $(foreach ($item in $AllIPData)
+{
+ "$($item.marker)," 
+}) ];
 
     var Colors = [
     "#FF0000", 

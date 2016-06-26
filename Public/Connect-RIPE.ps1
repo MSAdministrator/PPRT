@@ -1,5 +1,5 @@
 ﻿#requires -Version 3
-function Check-RIPE ()
+function Connect-RIPE ()
 {
     [CmdletBinding()]
     param (

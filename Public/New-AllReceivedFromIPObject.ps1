@@ -1,35 +1,36 @@
-﻿<#
-.Synopsis
-   Short description
-.DESCRIPTION
-   Long description
-.EXAMPLE
-   Example of how to use this cmdlet
-.EXAMPLE
-   Another example of how to use this cmdlet
+﻿#requires -Version 3
+<#
+        .Synopsis
+        Short description
+        .DESCRIPTION
+        Long description
+        .EXAMPLE
+        Example of how to use this cmdlet
+        .EXAMPLE
+        Another example of how to use this cmdlet
 #>
 function New-AllReceivedFromIPObject
 {
     [CmdletBinding()]
     Param
     (
-        [Parameter(Mandatory=$true,
-                   ValueFromPipelineByPropertyName=$true,
-                   ParameterSetName='MessageObject')]
+        [Parameter(Mandatory = $true,
+                ValueFromPipelineByPropertyName = $true,
+        ParameterSetName = 'MessageObject')]
         [PSTypeName('PPRT.Message')]
         $MessageObject,
 
-        [Parameter(Mandatory=$true,
-                   ValueFromPipelineByPropertyName=$true,
-                   ParameterSetName='EmailHeader')]
+        [Parameter(Mandatory = $true,
+                ValueFromPipelineByPropertyName = $true,
+        ParameterSetName = 'EmailHeader')]
         $EmailHeader,
 
-        [Parameter(Mandatory=$true,
-                   ValueFromPipelineByPropertyName=$true)]
+        [Parameter(Mandatory = $true,
+        ValueFromPipelineByPropertyName = $true)]
         $SavePath,
 
-        [Parameter(Mandatory=$false,
-                   ValueFromPipelineByPropertyName=$true)]
+        [Parameter(Mandatory = $false,
+        ValueFromPipelineByPropertyName = $true)]
         [switch]$HeatMap
     )
 
@@ -48,20 +49,34 @@ function New-AllReceivedFromIPObject
 
         switch ($PSBoundParameters.Keys)
         {
-            'MessageObject' { $msg = $MessageObject.Headers }
-            'EmailHeader'   { if($null -ne $EmailHeader)
-                              { $msg = $EmailHeader }
-                              else
-                              { Write-Warning 'Please provide Email Headers'; break }
-                            }
+            'MessageObject' 
+            {
+                $msg = $MessageObject.Headers 
+            }
+            'EmailHeader'   
+            {
+                if($null -ne $EmailHeader)
+                {
+                    $msg = $EmailHeader 
+                }
+                else
+                {
+                    Write-Warning -Message 'Please provide Email Headers'
+                    break
+                }
+            }
         }
 
         foreach ($item in $MessageObject)
         {
-
-            $ReceivedFromIP = (Parse-EmailHeader -InputFileName $item.Headers).From | Select-String -Pattern $regex -AllMatches |
-                ForEach-Object -Process { $_.Matches } |
-                    ForEach-Object -Process { $_.Value }
+            $ReceivedFromIP = (Parse-EmailHeader -InputFileName $item.Headers).From |
+            Select-String -Pattern $regex -AllMatches |
+            ForEach-Object -Process {
+                $_.Matches 
+            } |
+            ForEach-Object -Process {
+                $_.Value 
+            }
             
         
             foreach ($ip in $ReceivedFromIP)

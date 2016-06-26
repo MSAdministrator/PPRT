@@ -35,9 +35,9 @@ function Get-PhishingGeoLocation
             and builds a HTML webpage plotting those IPs
 
             You have several options for different types of maps:
-                MapStartingIP - This options places markers for the first IP listed in the Received From headers of the email
-                MapAllIPs - This option maps all "Received From" IPs from email headers and maps their total path
-                HeatMap - This option is similar to MapStartingIp, but instead of markers it provides a Heat Map of those first received from IPs
+            MapStartingIP - This options places markers for the first IP listed in the Received From headers of the email
+            MapAllIPs - This option maps all "Received From" IPs from email headers and maps their total path
+            HeatMap - This option is similar to MapStartingIp, but instead of markers it provides a Heat Map of those first received from IPs
 
             .PARAMETER message
             Specifices the message or messages you are wanting to plot on a map.  This messages need to be in a .msg format
@@ -106,7 +106,6 @@ function Get-PhishingGeoLocation
         }
         catch
         {
-    
             Write-Debug -Message 'Error: Please try and shutdown Outlook'
         }
 
@@ -118,10 +117,15 @@ function Get-PhishingGeoLocation
         #getting phishing URL from the current processing email message
         $phishingURL = ''
 
-        $phishingURL = $msg | Select-Object -Property body |
-                              Select-String -Pattern '(?:(?:https?|ftp|file)://|www\.|ftp\.)(?:\([-A-Z0-9+&@#/%=~_|$?!:,.]*\)|[-A-Z0-9+&@#/%=~_|$?!:,.])*(?:\([-A-Z0-9+&@#/%=~_|$?!:,.]*\)|[A-Z0-9+&@#/%=~_|$])' |
-                              ForEach-Object -Process { $_.Matches } |
-                              ForEach-Object -Process { $_.Value } 
+        $phishingURL = $msg |
+        Select-Object -Property body |
+        Select-String -Pattern '(?:(?:https?|ftp|file)://|www\.|ftp\.)(?:\([-A-Z0-9+&@#/%=~_|$?!:,.]*\)|[-A-Z0-9+&@#/%=~_|$?!:,.])*(?:\([-A-Z0-9+&@#/%=~_|$?!:,.]*\)|[A-Z0-9+&@#/%=~_|$])' |
+        ForEach-Object -Process {
+            $_.Matches 
+        } |
+        ForEach-Object -Process {
+            $_.Value 
+        } 
         
         Write-Verbose -Message "PhisingURL: $($phishingURL)"
 
@@ -134,8 +138,13 @@ function Get-PhishingGeoLocation
         {
             $firstReceivedFromIP = @()
             $firstReceivedFromIP = (Parse-EmailHeader -InputFileName $headers).From |
-                Select-String -Pattern $regex -AllMatches | ForEach-Object -Process { $_.Matches } |
-                    ForEach-Object -Process { $_.Value }
+            Select-String -Pattern $regex -AllMatches |
+            ForEach-Object -Process {
+                $_.Matches 
+            } |
+            ForEach-Object -Process {
+                $_.Value 
+            }
             
             #calling first received from header returned from parse-emailheader. Location is [0]
             $originalIpLocation = @()
@@ -150,7 +159,7 @@ function Get-PhishingGeoLocation
                     if (![string]::IsNullOrWhiteSpace($originalIpLocation.Response.Longitude))
                     {
                         #adding json markup data to object.  This will be passed to Get-PhishingGeoLocationStartingIps cmdlet
-                       $props = @{
+                        $props = @{
                             marker          = "`{'title': '$($msg.subject -replace "'",' ')', 'lat': '$($originalIpLocation.Response.Latitude)', 'lng': '$($originalIpLocation.Response.Longitude)', 'description': '<div><div></div><h1>$($msg.Subject -replace "'",' ')</h1><div><p><b>Subject</b>: $($msg.Subject -replace "'",' ')</p><p><b>Received Time</b>: $($msg.ReceivedTime)</p><p><b>Sender Email Address</b>: $($msg.SenderEmailAddress)</p><p><b>Sender Email Type</b>: $($msg.SenderEmailType)</p><p><b>Phishing URL</b>: $($phishingURL)</p></div></div>' }"
                             subject         = $msg.Subject
                             SentFromAddress = $msg.SenderEmailAddress
@@ -173,7 +182,7 @@ function Get-PhishingGeoLocation
                 {
                     if (![string]::IsNullOrWhiteSpace($originalIpLocation.Response.Longitude))
                     {
-                     $props = @{
+                        $props = @{
                             marker          = "new google.maps.LatLng($($originalIpLocation.Response.Latitude), $($originalIpLocation.Response.Longitude))"
                             subject         = $msg.Subject
                             SentFromAddress = $msg.SenderEmailAddress
@@ -194,9 +203,14 @@ function Get-PhishingGeoLocation
         {
             $originalPolyline = @()
             $ReceivedFromIP = @()
-            $ReceivedFromIP = (Parse-EmailHeader -InputFileName $headers).From | Select-String -Pattern $regex -AllMatches |
-                ForEach-Object -Process { $_.Matches } |
-                ForEach-Object -Process { $_.Value }
+            $ReceivedFromIP = (Parse-EmailHeader -InputFileName $headers).From |
+            Select-String -Pattern $regex -AllMatches |
+            ForEach-Object -Process {
+                $_.Matches 
+            } |
+            ForEach-Object -Process {
+                $_.Value 
+            }
 
             foreach ($ip in $ReceivedFromIP)
             {
