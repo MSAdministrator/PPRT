@@ -8,6 +8,7 @@ function Get-IPaddress ()
         $hostname,
 
         [Parameter(Mandatory = $true)]
+        [ValidateScript({ if (Test-Path $_){$true}else{ throw 'Please provide a valid path for LogPath' }})]
         $LogPath
     ) 
     <#

@@ -28,6 +28,7 @@ function New-PPRTAbuseContactObject
         $URLObject,
 
         [Parameter(Mandatory = $true)]
+        [ValidateScript({ if (Test-Path $_){$true}else{ throw 'Please provide a valid path for LogPath' }})]
         $LogPath
     )
     Begin
@@ -78,9 +79,9 @@ function New-PPRTAbuseContactObject
             foreach ($ip in $ipaddress)
             {
                 #based on the ipaddress we are going to get which WHOIS/RDAP to use
-                $whoisdb = Get-WhichWHOIS $ip
+                $whoisdb = Get-WhichWHOIS -ipaddress $ip
 
-                if ($whoisdb -eq $null)
+                if ($whoisdb.WHOIS -eq $null )
                 {
                     $log = Write-LogEntry -type Error -message 'New-PPRTAbuseContactObject: WHOIS is Null' -Folder $LogPath
                     $whoisdb = $null

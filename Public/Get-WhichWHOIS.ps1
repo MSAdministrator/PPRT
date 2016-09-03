@@ -4,7 +4,11 @@ function Get-WhichWHOIS ()
     [CmdletBinding()]
     param (
         [parameter(Mandatory = $true,Position = 1,HelpMessage = 'Please provide a valid IP Address')]
-        [string]$ipaddress
+        [string]$ipaddress,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateScript({ if (Test-Path $_){$true}else{ throw 'Please provide a valid path for LogPath' }})]
+        $LogPath
     ) 
     <#
             .SYNOPSIS 
@@ -23,32 +27,44 @@ function Get-WhichWHOIS ()
 
     #>
 
-    $arinips = (23, 24, 35, 40, 45, 47, 50, 54, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 96, 97, 98, 99, 100, 104, 107, 108, 128, 129, 130, 131, 132, 134, 135, 136, 137, 138, 139, 140, 142, 143, 144, 146, 147, 148, 149, 152, 155, 156, 157, 158, 159, 160, 161, 162, 164, 165, 166, 167, 168, 169, 170, 172, 173, 174, 184, 192, 198, 199, 204, 205, 206, 207, 208, 209, 216)
-    $apnicips = (1, 14, 27, 36, 39, 42, 43, 49, 58, 59, 60, 61, 101, 103, 106, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 133, 150, 153, 163, 171, 175, 180, 182, 183, 202, 203, 210, 211, 218, 219, 220, 221, 222, 223)
-    $afrinicips = (41, 102, 105, 154, 196, 197)
-    $lacnicips = (177, 179, 181, 186, 187, 189, 190, 191, 200, 201)
-    $ripeips = (2, 5, 31, 37, 46, 62, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 109, 141, 145, 151, 176, 178, 185, 188, 193, 194, 195, 212, 213, 217)
+    $RegistryObject = @()
 
-    $octet = $ipaddress.split('{.}')
+    try
+    {
+        $RegistryData = Invoke-RestMethod -Uri 'http://www.iana.org/assignments/ipv4-address-space/ipv4-address-space.xml'
+    }
+    catch
+    {
+        Write-LogEntry -type ERROR -message 'UNABLE TO REACH IANA.org' -Folder $LogPath
+        
+        throw 'Unable to reach http://www.iana.org/assignments/ipv4-address-space/ipv4-address-space.xml at this time'
+    }
 
-    if ($arinips -contains $octet[0])
+    for ($i = 1; $i -le $RegistryData.registry.record.Count; $i++)
     {
-        return 'arin'
-    }
-    if ($apnicips -contains $octet[0])
-    {
-        return 'apnic'
-    }
-    if ($afrinicips -contains $octet[0])
-    {
-        return 'afrinic'
-    }
-    if ($lacnicips -contains $octet[0])
-    {
-        return 'lacnic'
-    }
-    if ($ripeips -contains $octet[0])
-    {
-        return 'ripe'
+        if ($null -ne $RegistryData.registry.record[$i].prefix)
+        {
+            $TrimmedIP = $(($RegistryData.registry.record[$i].prefix).TrimStart("0"))
+            
+            $ComparisonIP = $TrimmedIP.Substring(0,$TrimmedIP.Length - 2)
+            
+            if ($($ipaddress.Split('{.}')[0]) -eq $ComparisonIP)
+            {
+                if ($RegistryData.registry.record[$i].whois -ne $null)
+                {
+                    $WHOIS = ($RegistryData.registry.record[$i].whois)
+                    
+                    $props = @{
+                        IPAddress = $ipaddress
+                        WHOIS = $(($WHOIS).Split('{.}')[1])
+                        OriginalWHOIS = $WHOIS
+                    }
+                    
+                    $TempObject = New-Object -TypeName PSCustomObject -Property $props
+                    
+                    Add-ObjectDetail -InputObject $TempObject -TypeName PPRT.WHOIS
+                }
+            }
+        }
     }
 }

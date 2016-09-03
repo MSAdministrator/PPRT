@@ -6,9 +6,10 @@ function Get-URLFromMessage
         [parameter(Mandatory = $true,
         HelpMessage = 'Please provide a .MSG file.')]
         [PSTypeName('PPRT.Message')]
-        $MessageObject,
+        $Message,
 
         [Parameter(Mandatory = $true)]
+        [ValidateScript({ if (Test-Path $_){$true}else{ throw 'Please provide a valid path for LogPath' }})]
         $LogPath
     ) 
     <#
@@ -26,33 +27,32 @@ function Get-URLFromMessage
             C:\PS> Get-URLFromMessage 'C:\Users\UserName\Desktop\PHISING_EMAILS\Dear Email User.msg'
 
     #>
+
+    Begin
+    {
+        $URLPattern = '(?:(?:https?|ftp|file)://|www\.|ftp\.)(?:\([-A-Z0-9+&@#/%=~_|$?!:,.]*\)|[-A-Z0-9+&@#/%=~_|$?!:,.])*(?:\([-A-Z0-9+&@#/%=~_|$?!:,.]*\)|[A-Z0-9+&@#/%=~_|$])'
  
-    $urlobject = @()
+        $URLObject = @()
+    }
+    Process
+    {
+        $log = Write-LogEntry -type Info -message "Get-URLFromMessage: Getting URL from $($Message.Subject)" -Folder $LogPath
 
-    foreach ($msg in $MessageObject)
-    { 
-        $log = Write-LogEntry -type Info -message "Get-URLFromMessage: Getting URL from $($msg.Subject)" -Folder $LogPath
+        $URL = $Message.body | Select-String -AllMatches $URLPattern | Select-Object -ExpandProperty Matches | Select-Object -ExpandProperty Value
 
-        $Subject = $msg.Subject
-        $msg.body |
-        Select-String -Pattern '(?:(?:https?|ftp|file)://|www\.|ftp\.)(?:\([-A-Z0-9+&@#/%=~_|$?!:,.]*\)|[-A-Z0-9+&@#/%=~_|$?!:,.])*(?:\([-A-Z0-9+&@#/%=~_|$?!:,.]*\)|[A-Z0-9+&@#/%=~_|$])' |
-        `
-        ForEach-Object -Process {
-            $_.Matches
-        } |
-        ForEach-Object -Process {
-            $URL = $_.Value
-
-            $props = @{
-                URL  = ($_.Value).trim('<','>')
-                Name = $Subject
-            }
-
-            $urlobject = New-Object -TypeName PSObject -Property $props
-
-            $log = Write-LogEntry -type Info -message 'Get-URLFromMessage: Getting URL complete!' -Folder $LogPath
-
-            Add-ObjectDetail -InputObject $urlobject -TypeName PPRT.PhishingURL 
+        $props = @{
+            URL  = $URL
+            Name = $Message.Subject
         }
+
+        $URLObject = New-Object -TypeName PSObject -Property $props
+
+        $log = Write-LogEntry -type Info -message 'Get-URLFromMessage: Getting URL complete!' -Folder $LogPath
+
+        Add-ObjectDetail -InputObject $URLObject -TypeName PPRT.PhishingURL 
+    }
+    End
+    {
+
     }
 }

@@ -170,7 +170,7 @@ function Invoke-PhishingResponse
 
             $log = Write-LogEntry -type Info -message "Invoke-PhishingResponse: Getting URL From $($msg.FullName)" -Folder $LogPath
 
-            $URLObject = Get-URLFromMessage -MessageObject $msg -LogPath $LogPath
+            $URLObject = Get-URLFromMessage -Message $msg -LogPath $LogPath
 
             $AbuseContactObject = @()
 

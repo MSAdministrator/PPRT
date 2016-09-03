@@ -9,6 +9,7 @@ function Get-AbsoluteUri
         $URLObject,
 
         [Parameter(Mandatory = $true)]
+        [ValidateScript({ if (Test-Path $_){$true}else{ throw 'Please provide a valid path for LogPath' }})]
         $LogPath
     ) 
     <#
@@ -95,7 +96,7 @@ function Get-AbsoluteUri
 
     $props = @{
         OriginalURL  = $URLObject
-        EncodedURL   = $encodedurl
+        EncodedURL   = $($encodedurl)
         AbsoluteURL  = $AbsoluteURL
         URLAuthority = $URLAuthority
     }

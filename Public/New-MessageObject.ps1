@@ -80,12 +80,12 @@ function New-MessageObject
         $ReturnOjbect = @()
         try 
         {
-            Add-Type -AssemblyName 'Microsoft.Office.Interop.Outlook'
+            #Add-Type -AssemblyName 'Microsoft.Office.Interop.Outlook'
             $outlook = New-Object -ComObject outlook.application
         }
         catch
         {
-            Exit
+            throw "Error opening Outlook.Application: $($Error[0] | Format-List -Property * -Force)"
         }
 
         #$object = @{}
