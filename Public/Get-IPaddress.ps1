@@ -5,7 +5,7 @@ function Get-IPaddress ()
     param (
         [parameter(Mandatory = $true,
         HelpMessage = 'Please provide a valid HOSTNAME')]
-        $hostname,
+        [string]$hostname,
 
         [Parameter(Mandatory = $true)]
         [ValidateScript({ if (Test-Path $_){$true}else{ throw 'Please provide a valid path for LogPath' }})]
